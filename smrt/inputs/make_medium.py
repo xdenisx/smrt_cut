@@ -624,6 +624,15 @@ def water_parameters(ice_type, **kwargs):
     elif ice_type == 'fresh':
         water_temperature = FREEZING_POINT
         water_salinity = 0.
+    elif ice_type == 'fresh_solid':
+        print('Fresh solid ice! Setting T and salinity...')
+        # Set the water temperature to the same as the last ice layer
+        water_temperature = temperature[-1]
+        # Set salinity to 0
+        water_salinity = 0.
+        print(f'T={water_temperature}')
+        print(f's={water_salinity}')
+        print('Done\n')
     else:
         raise SMRTError("'medium' must be set to one of the following: True (default), 'ocean', 'fresh'. Additional optional arguments"
                         " for function make_ice_column are 'water_temperature', 'water_salinity' and 'water_depth'.")
