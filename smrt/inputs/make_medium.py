@@ -361,7 +361,7 @@ def make_ice_column(ice_type,
 
     # add a substrate underneath the ice (if wanted):
     if add_water_substrate:
-        wp = water_parameters(ice_type, **kwargs)
+        wp = water_parameters(ice_type, temperature, **kwargs)
 
         # create a permittivity_function that depends only on frequency and temperature by setting other arguments
         def permittivity_model(f, t):
@@ -520,8 +520,30 @@ def make_ice_layer(ice_type,
                 or brine_volume_fraction is not None or salinity > 0:
             raise SMRTError("Setting any saline or brine parameter is invalid for fresh ice")
 
+    elif ice_type == "fresh_solid":
+        # scatterers permittivity
+        eps_2 = PERMITTIVITY_OF_AIR
+
+        # background permittivity
+        if ice_permittivity_model is None:
+            # 'must import this here instead of the top of the file because of cross-dependencies' is what it says above,
+            # so I did the same...
+            eps_1 = ice_permittivity_maetzler06
+        else:
+            eps_1 = ice_permittivity_model
+
+        # fractional volume of air
+        frac_volume = porosity
+
+        # shape of bubbles
+        inclusion_shape = 'spheres'
+
+        if saline_ice_permittivity_model is not None or brine_permittivity_model is not None \
+                or brine_volume_fraction is not None or salinity > 0:
+            raise SMRTError("Setting any saline or brine parameter is invalid for fresh ice")
+
     else:
-        raise SMRTError("Unknown ice_type. Must be firstyear, multiyear, or fresh")
+        raise SMRTError("Unknown ice_type. Must be firstyear, multiyear, fresh or fresh_solid")
 
     if isinstance(microstructure_model, str):
         microstructure_model = get_microstructure_model(microstructure_model)
@@ -609,7 +631,7 @@ def make_water_layer(layer_thickness,
     return lay
 
 
-def water_parameters(ice_type, **kwargs):
+def water_parameters(ice_type, temperature, **kwargs):
     """Make a semi-infinite water layer.
 
     :param ice_type: ice_type is used to determine if a saline or fresh water layer is added
